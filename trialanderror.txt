@@ -1,0 +1,1218 @@
+	
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    141 if self._inc_overflow():
+    142     try:
+--> 143         return self._create_connection()
+    144     except:
+    145         with util.safe_reraise():
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    270 def _create_connection(self):
+    271     """Called by subclasses to create a new ConnectionRecord."""
+--> 273     return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    386 self.__pool = pool
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    688     self.fresh = True
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+    692 else:
+    693     # in SQLAlchemy 1.4 the first_connect event is not used by
+    694     # the engine, so this will usually not be set
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    684 try:
+    685     self.starttime = time.time()
+--> 686     self.dbapi_connection = connection = pool._invoke_creator(self)
+    687     pool.logger.debug("Created new connection %r", connection)
+    688     self.fresh = True
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    576         if connection is not None:
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    119     kwasync['async_'] = kwargs.pop('async_')
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+    124     conn.cursor_factory = cursor_factory
+
+OperationalError: (psycopg2.OperationalError) connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+In [3]: run app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+
+In [4]: db.session.execute("SELECT * FROM movies")
+---------------------------------------------------------------------------
+OperationalError                          Traceback (most recent call last)
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    320 """Return a DBAPI connection from the pool.
+    321
+    322 The connection is instrumented such that when its
+   (...)
+    325
+    326 """
+--> 327 return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    893 if not fairy:
+--> 894     fairy = _ConnectionRecord.checkout(pool)
+    896     fairy._pool = pool
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    144 except:
+--> 145     with util.safe_reraise():
+    146         self._dec_overflow()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    142 try:
+--> 143     return self._create_connection()
+    144 except:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    271 """Called by subclasses to create a new ConnectionRecord."""
+--> 273 return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    685 self.starttime = time.time()
+--> 686 self.dbapi_connection = connection = pool._invoke_creator(self)
+    687 pool.logger.debug("Created new connection %r", connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+
+OperationalError: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+
+The above exception was the direct cause of the following exception:
+
+OperationalError                          Traceback (most recent call last)
+Cell In[4], line 1
+----> 1 db.session.execute("SELECT * FROM movies")
+
+File <string>:2, in execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1713, in Session.execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+   1709     execution_options = execution_options.union(
+   1710         dict(future_result=False)
+   1711     )
+   1712 else:
+-> 1713     conn = self._connection_for_bind(bind)
+   1714 result = conn._execute_20(statement, params or {}, execution_options)
+   1716 if compile_state_cls:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1552, in Session._connection_for_bind(self, engine, execution_options, **kw)
+   1549 TransactionalContext._trans_ctx_check(self)
+   1551 if self._transaction is not None or self._autobegin():
+-> 1552     return self._transaction._connection_for_bind(
+   1553         engine, execution_options
+   1554     )
+   1556 assert self._transaction is None
+   1557 assert self.autocommit
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:747, in SessionTransaction._connection_for_bind(self, bind, execution_options)
+    742             raise sa_exc.InvalidRequestError(
+    743                 "Session already has a Connection associated for the "
+    744                 "given Connection's Engine"
+    745             )
+    746     else:
+--> 747         conn = bind.connect()
+    748         local_connect = True
+    750 try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3315, in Engine.connect(self, close_with_result)
+   3300 def connect(self, close_with_result=False):
+   3301     """Return a new :class:`_engine.Connection` object.
+   3302
+   3303     The :class:`_engine.Connection` object is a facade that uses a DBAPI
+   (...)
+   3312
+   3313     """
+-> 3315     return self._connection_cls(self, close_with_result=close_with_result)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:96, in Connection.__init__(self, engine, connection, close_with_result, _branch_from, _execution_options, _dispatch, _has_events, _allow_revalidate)
+     91     self._has_events = _branch_from._has_events
+     92 else:
+     93     self._dbapi_connection = (
+     94         connection
+     95         if connection is not None
+---> 96         else engine.raw_connection()
+     97     )
+     99     self._transaction = self._nested_transaction = None
+    100     self.__savepoint_seq = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3394, in Engine.raw_connection(self, _connection)
+   3372 def raw_connection(self, _connection=None):
+   3373     """Return a "raw" DBAPI connection from the connection pool.
+   3374
+   3375     The returned object is a proxied version of the DBAPI
+   (...)
+   3392
+   3393     """
+-> 3394     return self._wrap_pool_connect(self.pool.connect, _connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3364, in Engine._wrap_pool_connect(self, fn, connection)
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+-> 3364         Connection._handle_dbapi_exception_noconnection(
+   3365             e, dialect, self
+   3366         )
+   3367     else:
+   3368         util.raise_(
+   3369             sys.exc_info()[1], with_traceback=sys.exc_info()[2]
+   3370         )
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:2198, in Connection._handle_dbapi_exception_noconnection(cls, e, dialect, engine)
+   2196     util.raise_(newraise, with_traceback=exc_info[2], from_=e)
+   2197 elif should_wrap:
+-> 2198     util.raise_(
+   2199         sqlalchemy_exception, with_traceback=exc_info[2], from_=e
+   2200     )
+   2201 else:
+   2202     util.raise_(exc_info[1], with_traceback=exc_info[2])
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3359 dialect = self.dialect
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    319 def connect(self):
+    320     """Return a DBAPI connection from the pool.
+    321
+    322     The connection is instrumented such that when its
+   (...)
+    325
+    326     """
+--> 327     return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    891 @classmethod
+    892 def _checkout(cls, pool, threadconns=None, fairy=None):
+    893     if not fairy:
+--> 894         fairy = _ConnectionRecord.checkout(pool)
+    896         fairy._pool = pool
+    897         fairy._counter = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+    495         dbapi_connection = rec.get_connection()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    143         return self._create_connection()
+    144     except:
+--> 145         with util.safe_reraise():
+    146             self._dec_overflow()
+    147 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    141 if self._inc_overflow():
+    142     try:
+--> 143         return self._create_connection()
+    144     except:
+    145         with util.safe_reraise():
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    270 def _create_connection(self):
+    271     """Called by subclasses to create a new ConnectionRecord."""
+--> 273     return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    386 self.__pool = pool
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    688     self.fresh = True
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+    692 else:
+    693     # in SQLAlchemy 1.4 the first_connect event is not used by
+    694     # the engine, so this will usually not be set
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    684 try:
+    685     self.starttime = time.time()
+--> 686     self.dbapi_connection = connection = pool._invoke_creator(self)
+    687     pool.logger.debug("Created new connection %r", connection)
+    688     self.fresh = True
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    576         if connection is not None:
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    119     kwasync['async_'] = kwargs.pop('async_')
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+    124     conn.cursor_factory = cursor_factory
+
+OperationalError: (psycopg2.OperationalError) connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+In [5]: db.session.execute(text('SELECT * FROM movies'))
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[5], line 1
+----> 1 db.session.execute(text('SELECT * FROM movies'))
+
+NameError: name 'text' is not defined
+
+In [6]:
+Do you really want to exit ([y]/n)? y
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ python app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+Traceback (most recent call last):
+  File "/home/sharo/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code/app.py", line 13, in <module>
+    from flask_debugtoolbar import DebugToolbarExtension
+ModuleNotFoundError: No module named 'flask_debugtoolbar'
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ python app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+Traceback (most recent call last):
+  File "/home/sharo/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code/app.py", line 13, in <module>
+    from flask_debugtoolbar import DebugToolbarExtension
+ModuleNotFoundError: No module named 'flask_debugtoolbar'
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ python app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+Traceback (most recent call last):
+  File "/home/sharo/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code/app.py", line 13, in <module>
+    from flask_debugtoolbar import DebugToolbarExtension
+ModuleNotFoundError: No module named 'flask_debugtoolbar'
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ pip3 install flask-debugtoolbar
+Collecting flask-debugtoolbar
+  Using cached Flask_DebugToolbar-0.13.1-py3-none-any.whl (324 kB)
+Requirement already satisfied: Flask>=0.8 in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from flask-debugtoolbar) (2.2.3)
+Requirement already satisfied: werkzeug in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from flask-debugtoolbar) (2.2.3)
+Requirement already satisfied: itsdangerous in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from flask-debugtoolbar) (2.1.2)
+Collecting Blinker
+  Using cached blinker-1.5-py2.py3-none-any.whl (12 kB)
+Requirement already satisfied: click>=8.0 in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from Flask>=0.8->flask-debugtoolbar) (8.1.3)
+Requirement already satisfied: Jinja2>=3.0 in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from Flask>=0.8->flask-debugtoolbar) (3.1.2)
+Requirement already satisfied: MarkupSafe>=2.1.1 in /home/sharo/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages (from werkzeug->flask-debugtoolbar) (2.1.2)
+Installing collected packages: Blinker, flask-debugtoolbar
+Successfully installed Blinker-1.5 flask-debugtoolbar-0.13.1
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ python app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ python app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ ipython
+/home/sharo/.local/lib/python3.10/site-packages/IPython/core/interactiveshell.py:882: UserWarning: Attempting to work in a virtualenv. If you encounter problems, please install IPython inside the virtualenv.
+  warn(
+Python 3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]
+Type 'copyright', 'credits' or 'license' for more information
+IPython 8.7.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: run app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+
+In [2]: db.session.execute("SELECT * FROM movies")
+<ipython-input-2-afdf74275494>:1: RemovedIn20Warning: Deprecated API features detected! These feature(s) are not compatible with SQLAlchemy 2.0. To prevent incompatible upgrades prior to updating applications, ensure requirements files are pinned to "sqlalchemy<2.0". Set environment variable SQLALCHEMY_WARN_20=1 to show all deprecation warnings.  Set environment variable SQLALCHEMY_SILENCE_UBER_WARNING=1 to silence this message. (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  db.session.execute("SELECT * FROM movies")
+---------------------------------------------------------------------------
+OperationalError                          Traceback (most recent call last)
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    320 """Return a DBAPI connection from the pool.
+    321
+    322 The connection is instrumented such that when its
+   (...)
+    325
+    326 """
+--> 327 return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    893 if not fairy:
+--> 894     fairy = _ConnectionRecord.checkout(pool)
+    896     fairy._pool = pool
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    144 except:
+--> 145     with util.safe_reraise():
+    146         self._dec_overflow()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    142 try:
+--> 143     return self._create_connection()
+    144 except:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    271 """Called by subclasses to create a new ConnectionRecord."""
+--> 273 return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    685 self.starttime = time.time()
+--> 686 self.dbapi_connection = connection = pool._invoke_creator(self)
+    687 pool.logger.debug("Created new connection %r", connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+
+OperationalError: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+
+The above exception was the direct cause of the following exception:
+
+OperationalError                          Traceback (most recent call last)
+Cell In[2], line 1
+----> 1 db.session.execute("SELECT * FROM movies")
+
+File <string>:2, in execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1713, in Session.execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+   1709     execution_options = execution_options.union(
+   1710         dict(future_result=False)
+   1711     )
+   1712 else:
+-> 1713     conn = self._connection_for_bind(bind)
+   1714 result = conn._execute_20(statement, params or {}, execution_options)
+   1716 if compile_state_cls:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1552, in Session._connection_for_bind(self, engine, execution_options, **kw)
+   1549 TransactionalContext._trans_ctx_check(self)
+   1551 if self._transaction is not None or self._autobegin():
+-> 1552     return self._transaction._connection_for_bind(
+   1553         engine, execution_options
+   1554     )
+   1556 assert self._transaction is None
+   1557 assert self.autocommit
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:747, in SessionTransaction._connection_for_bind(self, bind, execution_options)
+    742             raise sa_exc.InvalidRequestError(
+    743                 "Session already has a Connection associated for the "
+    744                 "given Connection's Engine"
+    745             )
+    746     else:
+--> 747         conn = bind.connect()
+    748         local_connect = True
+    750 try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3315, in Engine.connect(self, close_with_result)
+   3300 def connect(self, close_with_result=False):
+   3301     """Return a new :class:`_engine.Connection` object.
+   3302
+   3303     The :class:`_engine.Connection` object is a facade that uses a DBAPI
+   (...)
+   3312
+   3313     """
+-> 3315     return self._connection_cls(self, close_with_result=close_with_result)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:96, in Connection.__init__(self, engine, connection, close_with_result, _branch_from, _execution_options, _dispatch, _has_events, _allow_revalidate)
+     91     self._has_events = _branch_from._has_events
+     92 else:
+     93     self._dbapi_connection = (
+     94         connection
+     95         if connection is not None
+---> 96         else engine.raw_connection()
+     97     )
+     99     self._transaction = self._nested_transaction = None
+    100     self.__savepoint_seq = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3394, in Engine.raw_connection(self, _connection)
+   3372 def raw_connection(self, _connection=None):
+   3373     """Return a "raw" DBAPI connection from the connection pool.
+   3374
+   3375     The returned object is a proxied version of the DBAPI
+   (...)
+   3392
+   3393     """
+-> 3394     return self._wrap_pool_connect(self.pool.connect, _connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3364, in Engine._wrap_pool_connect(self, fn, connection)
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+-> 3364         Connection._handle_dbapi_exception_noconnection(
+   3365             e, dialect, self
+   3366         )
+   3367     else:
+   3368         util.raise_(
+   3369             sys.exc_info()[1], with_traceback=sys.exc_info()[2]
+   3370         )
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:2198, in Connection._handle_dbapi_exception_noconnection(cls, e, dialect, engine)
+   2196     util.raise_(newraise, with_traceback=exc_info[2], from_=e)
+   2197 elif should_wrap:
+-> 2198     util.raise_(
+   2199         sqlalchemy_exception, with_traceback=exc_info[2], from_=e
+   2200     )
+   2201 else:
+   2202     util.raise_(exc_info[1], with_traceback=exc_info[2])
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3359 dialect = self.dialect
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    319 def connect(self):
+    320     """Return a DBAPI connection from the pool.
+    321
+    322     The connection is instrumented such that when its
+   (...)
+    325
+    326     """
+--> 327     return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    891 @classmethod
+    892 def _checkout(cls, pool, threadconns=None, fairy=None):
+    893     if not fairy:
+--> 894         fairy = _ConnectionRecord.checkout(pool)
+    896         fairy._pool = pool
+    897         fairy._counter = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+    495         dbapi_connection = rec.get_connection()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    143         return self._create_connection()
+    144     except:
+--> 145         with util.safe_reraise():
+    146             self._dec_overflow()
+    147 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    141 if self._inc_overflow():
+    142     try:
+--> 143         return self._create_connection()
+    144     except:
+    145         with util.safe_reraise():
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    270 def _create_connection(self):
+    271     """Called by subclasses to create a new ConnectionRecord."""
+--> 273     return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    386 self.__pool = pool
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    688     self.fresh = True
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+    692 else:
+    693     # in SQLAlchemy 1.4 the first_connect event is not used by
+    694     # the engine, so this will usually not be set
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    684 try:
+    685     self.starttime = time.time()
+--> 686     self.dbapi_connection = connection = pool._invoke_creator(self)
+    687     pool.logger.debug("Created new connection %r", connection)
+    688     self.fresh = True
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    576         if connection is not None:
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    119     kwasync['async_'] = kwargs.pop('async_')
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+    124     conn.cursor_factory = cursor_factory
+
+OperationalError: (psycopg2.OperationalError) connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+In [3]: db.session.execute(text('SELECT * FROM movies'))
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[3], line 1
+----> 1 db.session.execute(text('SELECT * FROM movies'))
+
+NameError: name 'text' is not defined
+
+In [4]: run app.py
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+
+In [5]: db.session.execute(text('SELECT * FROM movies'))
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[5], line 1
+----> 1 db.session.execute(text('SELECT * FROM movies'))
+
+NameError: name 'text' is not defined
+
+In [6]: db.session.execute("SELECT * FROM movies")
+---------------------------------------------------------------------------
+OperationalError                          Traceback (most recent call last)
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    320 """Return a DBAPI connection from the pool.
+    321
+    322 The connection is instrumented such that when its
+   (...)
+    325
+    326 """
+--> 327 return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    893 if not fairy:
+--> 894     fairy = _ConnectionRecord.checkout(pool)
+    896     fairy._pool = pool
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    144 except:
+--> 145     with util.safe_reraise():
+    146         self._dec_overflow()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    142 try:
+--> 143     return self._create_connection()
+    144 except:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    271 """Called by subclasses to create a new ConnectionRecord."""
+--> 273 return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    685 self.starttime = time.time()
+--> 686 self.dbapi_connection = connection = pool._invoke_creator(self)
+    687 pool.logger.debug("Created new connection %r", connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+
+OperationalError: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+
+The above exception was the direct cause of the following exception:
+
+OperationalError                          Traceback (most recent call last)
+Cell In[6], line 1
+----> 1 db.session.execute("SELECT * FROM movies")
+
+File <string>:2, in execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1713, in Session.execute(self, statement, params, execution_options, bind_arguments, _parent_execute_state, _add_event, **kw)
+   1709     execution_options = execution_options.union(
+   1710         dict(future_result=False)
+   1711     )
+   1712 else:
+-> 1713     conn = self._connection_for_bind(bind)
+   1714 result = conn._execute_20(statement, params or {}, execution_options)
+   1716 if compile_state_cls:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:1552, in Session._connection_for_bind(self, engine, execution_options, **kw)
+   1549 TransactionalContext._trans_ctx_check(self)
+   1551 if self._transaction is not None or self._autobegin():
+-> 1552     return self._transaction._connection_for_bind(
+   1553         engine, execution_options
+   1554     )
+   1556 assert self._transaction is None
+   1557 assert self.autocommit
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py:747, in SessionTransaction._connection_for_bind(self, bind, execution_options)
+    742             raise sa_exc.InvalidRequestError(
+    743                 "Session already has a Connection associated for the "
+    744                 "given Connection's Engine"
+    745             )
+    746     else:
+--> 747         conn = bind.connect()
+    748         local_connect = True
+    750 try:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3315, in Engine.connect(self, close_with_result)
+   3300 def connect(self, close_with_result=False):
+   3301     """Return a new :class:`_engine.Connection` object.
+   3302
+   3303     The :class:`_engine.Connection` object is a facade that uses a DBAPI
+   (...)
+   3312
+   3313     """
+-> 3315     return self._connection_cls(self, close_with_result=close_with_result)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:96, in Connection.__init__(self, engine, connection, close_with_result, _branch_from, _execution_options, _dispatch, _has_events, _allow_revalidate)
+     91     self._has_events = _branch_from._has_events
+     92 else:
+     93     self._dbapi_connection = (
+     94         connection
+     95         if connection is not None
+---> 96         else engine.raw_connection()
+     97     )
+     99     self._transaction = self._nested_transaction = None
+    100     self.__savepoint_seq = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3394, in Engine.raw_connection(self, _connection)
+   3372 def raw_connection(self, _connection=None):
+   3373     """Return a "raw" DBAPI connection from the connection pool.
+   3374
+   3375     The returned object is a proxied version of the DBAPI
+   (...)
+   3392
+   3393     """
+-> 3394     return self._wrap_pool_connect(self.pool.connect, _connection)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3364, in Engine._wrap_pool_connect(self, fn, connection)
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+-> 3364         Connection._handle_dbapi_exception_noconnection(
+   3365             e, dialect, self
+   3366         )
+   3367     else:
+   3368         util.raise_(
+   3369             sys.exc_info()[1], with_traceback=sys.exc_info()[2]
+   3370         )
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:2198, in Connection._handle_dbapi_exception_noconnection(cls, e, dialect, engine)
+   2196     util.raise_(newraise, with_traceback=exc_info[2], from_=e)
+   2197 elif should_wrap:
+-> 2198     util.raise_(
+   2199         sqlalchemy_exception, with_traceback=exc_info[2], from_=e
+   2200     )
+   2201 else:
+   2202     util.raise_(exc_info[1], with_traceback=exc_info[2])
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py:3361, in Engine._wrap_pool_connect(self, fn, connection)
+   3359 dialect = self.dialect
+   3360 try:
+-> 3361     return fn()
+   3362 except dialect.dbapi.Error as e:
+   3363     if connection is None:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:327, in Pool.connect(self)
+    319 def connect(self):
+    320     """Return a DBAPI connection from the pool.
+    321
+    322     The connection is instrumented such that when its
+   (...)
+    325
+    326     """
+--> 327     return _ConnectionFairy._checkout(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:894, in _ConnectionFairy._checkout(cls, pool, threadconns, fairy)
+    891 @classmethod
+    892 def _checkout(cls, pool, threadconns=None, fairy=None):
+    893     if not fairy:
+--> 894         fairy = _ConnectionRecord.checkout(pool)
+    896         fairy._pool = pool
+    897         fairy._counter = 0
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:493, in _ConnectionRecord.checkout(cls, pool)
+    491 @classmethod
+    492 def checkout(cls, pool):
+--> 493     rec = pool._do_get()
+    494     try:
+    495         dbapi_connection = rec.get_connection()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:145, in QueuePool._do_get(self)
+    143         return self._create_connection()
+    144     except:
+--> 145         with util.safe_reraise():
+    146             self._dec_overflow()
+    147 else:
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/impl.py:143, in QueuePool._do_get(self)
+    141 if self._inc_overflow():
+    142     try:
+--> 143         return self._create_connection()
+    144     except:
+    145         with util.safe_reraise():
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:273, in Pool._create_connection(self)
+    270 def _create_connection(self):
+    271     """Called by subclasses to create a new ConnectionRecord."""
+--> 273     return _ConnectionRecord(self)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:388, in _ConnectionRecord.__init__(self, pool, connect)
+    386 self.__pool = pool
+    387 if connect:
+--> 388     self.__connect()
+    389 self.finalize_callback = deque()
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:690, in _ConnectionRecord.__connect(self)
+    688     self.fresh = True
+    689 except BaseException as e:
+--> 690     with util.safe_reraise():
+    691         pool.logger.debug("Error on connect(): %s", e)
+    692 else:
+    693     # in SQLAlchemy 1.4 the first_connect event is not used by
+    694     # the engine, so this will usually not be set
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py:70, in safe_reraise.__exit__(self, type_, value, traceback)
+     68     self._exc_info = None  # remove potential circular references
+     69     if not self.warn_only:
+---> 70         compat.raise_(
+     71             exc_value,
+     72             with_traceback=exc_tb,
+     73         )
+     74 else:
+     75     if not compat.py3k and self._exc_info and self._exc_info[1]:
+     76         # emulate Py3K's behavior of telling us when an exception
+     77         # occurs in an exception handler.
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py:211, in raise_(***failed resolving arguments***)
+    208     exception.__cause__ = replace_context
+    210 try:
+--> 211     raise exception
+    212 finally:
+    213     # credit to
+    214     # https://cosmicpercolator.com/2016/01/13/exception-leaks-in-python-2-and-3/
+    215     # as the __traceback__ object creates a cycle
+    216     del exception, replace_context, from_, with_traceback
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/pool/base.py:686, in _ConnectionRecord.__connect(self)
+    684 try:
+    685     self.starttime = time.time()
+--> 686     self.dbapi_connection = connection = pool._invoke_creator(self)
+    687     pool.logger.debug("Created new connection %r", connection)
+    688     self.fresh = True
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/create.py:578, in create_engine.<locals>.connect(connection_record)
+    576         if connection is not None:
+    577             return connection
+--> 578 return dialect.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py:598, in DefaultDialect.connect(self, *cargs, **cparams)
+    596 def connect(self, *cargs, **cparams):
+    597     # inherits the docstring from interfaces.Dialect.connect
+--> 598     return self.dbapi.connect(*cargs, **cparams)
+
+File ~/usf/SQLAlchemy_Unit-27/venv/lib/python3.10/site-packages/psycopg2/__init__.py:122, in connect(dsn, connection_factory, cursor_factory, **kwargs)
+    119     kwasync['async_'] = kwargs.pop('async_')
+    121 dsn = _ext.make_dsn(dsn, **kwargs)
+--> 122 conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+    123 if cursor_factory is not None:
+    124     conn.cursor_factory = cursor_factory
+
+OperationalError: (psycopg2.OperationalError) connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "sqla_intro" does not exist
+
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+In [7]:
+Do you really want to exit ([y]/n)? y
+(venv) sharo@DESKTOP-9R9UPU2:~/usf/SQLAlchemy_Unit-27/27.1_SQLAlchemy-Intro-Demo Code$ psql
+psql (14.5 (Ubuntu 14.5-0ubuntu0.22.04.1))
+Type "help" for help.
+
+sharo=# \dt
+Did not find any relations.
+sharo=# \l
+                                List of databases
+      Name      |  Owner   | Encoding | Collate |  Ctype  |   Access privileges
+----------------+----------+----------+---------+---------+-----------------------
+ air_traffic    | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ joins_exercise | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ library        | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ movies_example | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ outer_space    | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ playstore      | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ postgres       | postgres | UTF8     | C.UTF-8 | C.UTF-8 |
+ products_db    | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ reddit_db      | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ sharo          | sharo    | UTF8     | C.UTF-8 | C.UTF-8 |
+ template0      | postgres | UTF8     | C.UTF-8 | C.UTF-8 | =c/postgres          +
+                |          |          |         |         | postgres=CTc/postgres
+	
